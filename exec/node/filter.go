@@ -19,7 +19,9 @@ package node
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
@@ -55,7 +57,7 @@ func (e *ExpController) filterByOtherFlags(nodes []v1.Node, flags map[string]str
 		if err != nil {
 			return nil, err
 		}
-		return nodes[:count], nil
+		return randomNodeSelected(nodes, count), nil
 	}
 	groupNodes := make(map[string][]v1.Node, 0)
 	keys := strings.Split(groupKey, ",")
@@ -74,9 +76,21 @@ func (e *ExpController) filterByOtherFlags(nodes []v1.Node, flags map[string]str
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, nodeList[:count]...)
+		result = append(result, randomNodeSelected(nodeList, count)...)
 	}
 	return result, nil
+}
+
+func randomNodeSelected(nodes []v1.Node, count int) []v1.Node {
+	if len(nodes) == 0 {
+		return nodes
+	}
+	rand.Seed(time.Now().UnixNano())
+	for i := len(nodes) - 1; i > 0; i-- {
+		num := rand.Intn(i + 1)
+		nodes[i], nodes[num] = nodes[num], nodes[i]
+	}
+	return nodes[:count]
 }
 
 var resourceFunc = func(client2 *channel.Client, flags map[string]string) ([]v1.Node, error) {

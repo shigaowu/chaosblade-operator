@@ -19,7 +19,9 @@ package model
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"k8s.io/api/core/v1"
@@ -88,7 +90,7 @@ func (b *BaseExperimentController) filterByOtherFlags(pods []v1.Pod, flags map[s
 		if err != nil {
 			return nil, err
 		}
-		return pods[:count], nil
+		return randomPodSelected(pods, count), nil
 	}
 	groupPods := make(map[string][]v1.Pod, 0)
 	keys := strings.Split(groupKey, ",")
@@ -109,9 +111,21 @@ func (b *BaseExperimentController) filterByOtherFlags(pods []v1.Pod, flags map[s
 		if err != nil {
 			return nil, err
 		}
-		result = append(result, podList[:count]...)
+		result = append(result, randomPodSelected(podList, count)...)
 	}
 	return result, nil
+}
+
+func randomPodSelected(pods []v1.Pod, count int) []v1.Pod {
+	if len(pods) == 0 {
+		return pods
+	}
+	rand.Seed(time.Now().UnixNano())
+	for i := len(pods) - 1; i > 0; i-- {
+		num := rand.Intn(i + 1)
+		pods[i], pods[num] = pods[num], pods[i]
+	}
+	return pods[:count]
 }
 
 // resourceFunc is used to query the target resource
