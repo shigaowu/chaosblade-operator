@@ -18,3 +18,5 @@ spec:
     - name: names
       value: ["frontend-d89756ff7-pbnnc"]
       # or use pod labels
+    - name: namespace
+      value: ["sgw"]
